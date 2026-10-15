@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wear Wisely — Clothing Brand Sustainability Checker</title>
+<meta name="description" content="Search a clothing brand and get a 0–100 sustainability score backed by public sources.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4efe6; --surface:#fbf8f2; --ink:#2e2a24; --muted:#7a7064; --line:#e2d9cb;
+  --clay:#b5653f; --moss:#5f6f4a; --sand:#d8c7a8; --ochre:#c79a3e; --rust:#9c4a2f;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Work Sans",system-ui,sans-serif;line-height:1.55;min-height:100vh}
+h1,h2,h3,.serif{font-family:"Fraunces",Georgia,serif;font-weight:600;letter-spacing:-.01em}
+a{color:var(--moss)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+header{padding:28px 0;display:flex;justify-content:space-between;align-items:center}
+.logo{font-family:"Fraunces",serif;font-size:1.35rem;font-weight:600;display:flex;gap:10px;align-items:center}
+.logo span{width:12px;height:12px;border-radius:50%;background:var(--moss);display:inline-block}
+nav button{background:none;border:none;font:inherit;color:var(--muted);padding:8px 14px;border-radius:999px;cursor:pointer}
+nav button.active{background:var(--ink);color:var(--surface)}
+.hero{padding:48px 0 32px;text-align:center}
+.hero h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.08;max-width:680px;margin:0 auto 14px}
+.hero p{color:var(--muted);max-width:520px;margin:0 auto}
+.search{position:relative;max-width:560px;margin:32px auto 0}
+.search input{width:100%;padding:18px 22px;font:inherit;font-size:1.05rem;border:1px solid var(--line);background:var(--surface);border-radius:999px;outline:none;color:var(--ink)}
+.search input:focus{border-color:var(--moss);box-shadow:0 0 0 4px rgba(95,111,74,.12)}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;z-index:5;display:none;text-align:left}
+.sugg div{padding:12px 20px;cursor:pointer;display:flex;justify-content:space-between}
+.sugg div:hover,.sugg div.on{background:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font:inherit;font-size:.85rem;color:var(--muted);cursor:pointer}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+.result{margin:40px 0 64px;animation:up .4s ease}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.top{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+.ring{--p:0;--c:var(--moss);width:132px;height:132px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center;flex-shrink:0}
+.ring>div{width:108px;height:108px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center}
+.ring b{font-family:"Fraunces",serif;font-size:2.3rem;line-height:1}
+.ring small{color:var(--muted);font-size:.72rem}
+.meta h2{font-size:2rem}
+.meta p{color:var(--muted);max-width:560px}
+.tag{display:inline-block;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;padding:4px 10px;border-radius:999px;margin-bottom:8px;color:var(--surface)}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:28px}
+.cat{border-top:1px solid var(--line);padding-top:16px}
+.cat h3{font-size:1.05rem;display:flex;justify-content:space-between}
+.bar{height:6px;background:var(--line);border-radius:6px;margin:8px 0 10px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:6px}
+.cat p{font-size:.9rem;color:var(--muted)}
+sup a{font-size:.7rem;text-decoration:none;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:2px;color:var(--clay)}
+.sources{margin-top:28px;border-top:1px solid var(--line);padding-top:18px}
+.sources h3{font-size:1rem;margin-bottom:8px}
+.sources ol{padding-left:20px;font-size:.88rem;color:var(--muted)}
+.sources li{margin:4px 0}
+.cmp-pick{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin:32px 0}
+.cmp-pick select{width:100%;padding:14px 18px;font:inherit;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink)}
+.vs{font-family:"Fraunces",serif;color:var(--muted)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:64px}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;margin-top:14px}
+.win{color:var(--moss);font-weight:600}
+.method{font-size:.88rem;color:var(--muted);margin-bottom:64px}
+.method h3{color:var(--ink);margin-bottom:8px}
+.finds{margin:8px 0 0 16px;font-size:.85rem;color:var(--ink)}.finds li{margin:4px 0}.nos{font-size:.8rem;font-style:italic;margin-top:6px}
+.empty{text-align:center;color:var(--muted);margin:40px 0}
+footer{border-top:1px solid var(--line);padding:24px 0;font-size:.8rem;color:var(--muted)}
+.hidden{display:none}
+@media(max-width:700px){.cmp{grid-template-columns:1fr}.cmp-pick{grid-template-columns:1fr}.vs{text-align:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo"><span></span>Wear Wisely</div>
+  <nav><button id="tabS" class="active">Search</button><button id="tabC">Compare</button><button id="tabM">Method</button></nav>
+</header>
+
+<section id="viewS">
+  <div class="hero">
+    <h1>Know what you wear before you wear it.</h1>
+    <p>Type a clothing brand to see a 0–100 sustainability score built from public ratings and reports — every claim linked to its source.</p>
+    <div class="search">
+      <input id="q" placeholder="Search a brand, e.g. Patagonia" autocomplete="off">
+      <div class="sugg" id="sugg"></div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div id="out"></div>
+</section>
+
+<section id="viewC" class="hidden">
+  <div class="hero" style="padding-bottom:0"><h1>Side by side.</h1><p>Pick two brands to compare their scores category by category.</p></div>
+  <div class="cmp-pick"><select id="a"></select><div class="vs">vs</div><select id="b"></select></div>
+  <div class="cmp" id="cmp"></div>
+</section>
+
+<section id="viewM" class="hidden">
+  <div class="hero" style="padding-bottom:0"><h1>How scores work.</h1></div>
+  <div class="card method">
+    <h3>Four weighted categories</h3>
+    <p><b>Environment (35%)</b> — climate targets, materials, chemicals, waste. <b>Labour (30%)</b> — living wages, supply-chain audits, worker rights. <b>Transparency (20%)</b> — supplier disclosure and reporting, informed by the Fashion Transparency Index. <b>Animal welfare (15%)</b> — use and sourcing of animal-derived materials.</p><br>
+    <h3>Sources</h3>
+    <p>Each brand is evaluated using credible public sources specific to that brand — investigative journalism (BBC, Reuters, The Guardian), NGO and watchdog reports (Clean Clothes Campaign, Human Rights Watch, Stand.earth, Changing Markets, Public Eye, Remake, Fashion Revolution), certification bodies (B Lab, SBTi) and the brand's own published reports. Every finding is linked to its source and tagged by category.</p><br>
+    <h3>Important</h3>
+    <p>Scores are an editorial summary for quick guidance, not an official rating. Public ratings change over time — always follow the source links for the most current information.</p>
+  </div>
+</section>
+</div>
+<footer><div class="wrap">Wear Wisely · Scores summarise public sources; verify via the linked references.</div></footer>
+
+<script>
+const S={
+ goy:(s)=>({t:"Good On You — brand rating",u:"https://goodonyou.eco/rated/"+s+"/"}),
+ fti:{t:"Fashion Revolution — Fashion Transparency Index",u:"https://www.fashionrevolution.org/about/transparency/"},
+ remake:{t:"Remake — Fashion Accountability Report",u:"https://remake.world/fashion-accountability-report/"},
+ bcorp:(s)=>({t:"B Lab — B Corp directory",u:"https://www.bcorporation.net/en-us/find-a-b-corp/company/"+s+"/"}),
+ own:(t,u)=>({t,u}),
+};
+const B=[
+ {n:"Patagonia",d:"Outdoor apparel company and certified B Corp known for environmental activism and repair programs.",
+  e:[88,"Majority recycled/organic materials, Worn Wear repair & resale, 1% for the Planet founder.",[0,2,4]],
+  l:[78,"Fair Trade Certified sewing for much of its line; living-wage progress still incomplete.",[0,2]],
+  t:[75,"Publishes tier 1 & 2 supplier maps and ranks highly in transparency studies.",[1,4]],
+  a:[70,"Responsible Down & Wool Standards; still uses some animal materials.",[0]],
+  s:[S.goy("patagonia"),S.fti,S.remake,S.bcorp("patagonia-inc"),S.own("Patagonia — Footprint & supply chain","https://www.patagonia.com/our-footprint/")]},
+ {n:"Eileen Fisher",d:"Womenswear label and B Corp focused on organic fibres and take-back resale.",
+  e:[82,"Predominantly organic & recycled fibres; Renew take-back program.",[0,3]],
+  l:[72,"Supplier code and audits; partial living-wage commitments.",[0,2]],
+  t:[65,"Discloses suppliers and publishes impact reports.",[1,3]],
+  a:[60,"Uses wool and silk with some certified sourcing.",[0]],
+  s:[S.goy("eileen-fisher"),S.fti,S.remake,S.own("Eileen Fisher — Renew & impact","https://www.eileenfisher.com/")]},
+ {n:"Reformation",d:"LA-based brand publishing per-item environmental footprints.",
+  e:[78,"Low-impact fibre focus and climate-positive targets; tracks garment footprints.",[0,3]],
+  l:[55,"Owns its LA factory; overseas living-wage evidence is limited.",[0,2]],
+  t:[60,"Quarterly sustainability reports and supplier lists.",[3]],
+  a:[75,"Avoids most animal materials except some wool/leather.",[0]],
+  s:[S.goy("reformation"),S.fti,S.remake,S.own("Reformation — Sustainability report","https://www.thereformation.com/sustainability")]},
+ {n:"Everlane",d:"Direct-to-consumer basics brand built on 'radical transparency'.",
+  e:[60,"Growing share of recycled materials and set science-based targets.",[0]],
+  l:[50,"Audits factories, but little evidence of living wages.",[0,2]],
+  t:[55,"Shares factory profiles; full supply-chain disclosure is limited.",[1,3]],
+  a:[60,"Uses leather, wool and some down.",[0]],
+  s:[S.goy("everlane"),S.fti,S.remake,S.own("Everlane — Factories","https://www.everlane.com/factories")]},
+ {n:"Levi's",d:"Heritage denim brand with water-saving production programs.",
+  e:[65,"Water<Less finishing techniques and science-based climate targets.",[0,3]],
+  l:[52,"Worker Well-being initiative; no full living-wage commitment.",[0,2]],
+  t:[62,"Publishes supplier lists and scores well in transparency indexes.",[1]],
+  a:[55,"Uses leather patches and some wool.",[0]],
+  s:[S.goy("levis"),S.fti,S.remake,S.own("Levi Strauss & Co. — Sustainability","https://www.levistrauss.com/sustainability-report/")]},
+ {n:"Adidas",d:"Global sportswear group with recycled-polyester commitments.",
+  e:[60,"High share of recycled polyester and climate targets.",[0,3]],
+  l:[48,"Strong audit program; wage and union issues reported.",[0,2]],
+  t:[70,"Discloses much of its supply chain; high transparency ranking.",[1]],
+  a:[50,"Uses leather and some exotic-free animal materials.",[0]],
+  s:[S.goy("adidas"),S.fti,S.remake,S.own("adidas — Sustainability","https://www.adidas-group.com/en/sustainability")]},
+ {n:"Nike",d:"Sportswear giant with circular design and renewable energy goals.",
+  e:[55,"Move to Zero program; overall emissions remain large.",[0,3]],
+  l:[40,"Code of conduct and audits; living-wage evidence is weak.",[0,2]],
+  t:[62,"Publishes manufacturing map and impact reports.",[1,3]],
+  a:[45,"Significant leather use.",[0]],
+  s:[S.goy("nike"),S.fti,S.remake,S.own("Nike — Impact report","https://about.nike.com/en/impact")]},
+ {n:"H&M",d:"Fast-fashion retailer with large recycling and transparency programs.",
+  e:[50,"Recycled/organic material goals, but high-volume model drives impact.",[0,3]],
+  l:[38,"Fair-wage strategy announced; supply-chain wages remain low.",[0,2]],
+  t:[70,"Among top scorers for supplier disclosure.",[1]],
+  a:[50,"Uses wool, leather and down with some standards.",[0]],
+  s:[S.goy("hm"),S.fti,S.remake,S.own("H&M Group — Sustainability disclosure","https://hmgroup.com/sustainability/")]},
+ {n:"Uniqlo",d:"Japanese basics retailer under Fast Retailing.",
+  e:[45,"Climate targets and recycling program, but limited material change.",[0,3]],
+  l:[38,"Audits suppliers; little evidence of living wages.",[0,2]],
+  t:[50,"Publishes core supplier lists.",[1]],
+  a:[50,"Uses wool, cashmere and down.",[0]],
+  s:[S.goy("uniqlo"),S.fti,S.remake,S.own("Fast Retailing — Sustainability","https://www.fastretailing.com/eng/sustainability/")]},
+ {n:"Zara",d:"Flagship fast-fashion brand of Inditex.",
+  e:[42,"Material targets set, but rapid trend cycles increase waste.",[0,3]],
+  l:[35,"Code of conduct and audits; living wage not ensured.",[0,2]],
+  t:[55,"Discloses suppliers via Inditex.",[1]],
+  a:[45,"Uses leather, wool and some down.",[0]],
+  s:[S.goy("zara"),S.fti,S.remake,S.own("Inditex — Sustainability","https://www.inditex.com/itxcomweb/en/sustainability")]},
+ {n:"Gap",d:"US apparel group including Old Navy and Banana Republic.",
+  e:[45,"Water and cotton sourcing goals; limited circularity.",[0,3]],
+  l:[38,"Worker programs exist; wages remain low.",[0,2]],
+  t:[58,"Publishes supplier lists and ESG reports.",[1]],
+  a:[50,"Uses some animal materials.",[0]],
+  s:[S.goy("gap"),S.fti,S.remake,S.own("Gap Inc. — ESG","https://www.gapinc.com/en-us/values/sustainability")]},
+ {n:"Lululemon",d:"Athleisure brand relying heavily on synthetic fabrics.",
+  e:[42,"Climate targets set; synthetic-heavy materials.",[0,3]],
+  l:[40,"Supplier code and audits; no living-wage proof.",[0,2]],
+  t:[50,"Publishes some supplier information.",[1]],
+  a:[55,"Limited animal materials.",[0]],
+  s:[S.goy("lululemon"),S.fti,S.remake,S.own("lululemon — Impact","https://corporate.lululemon.com/our-impact")]},
+ {n:"Primark",d:"Ultra-low-price UK retailer.",
+  e:[35,"Sustainable cotton program, but very high volumes.",[0,3]],
+  l:[30,"Audits and some training; wages remain low.",[0,2]],
+  t:[50,"Publishes a global sourcing map.",[1]],
+  a:[45,"Uses some animal materials.",[0]],
+  s:[S.goy("primark"),S.fti,S.remake,S.own("Primark — Sustainability","https://corporate.primark.com/en-gb/a/sustainability")]},
+ {n:"Shein",d:"Ultra-fast-fashion online retailer.",
+  e:[15,"Massive volume of synthetic, low-durability clothing; minimal targets.",[0,2]],
+  l:[12,"Reports of excessive hours and low pay in suppliers.",[0,2]],
+  t:[20,"Little supplier disclosure.",[1]],
+  a:[40,"Mostly synthetic; little animal-welfare policy.",[0]],
+  s:[S.goy("shein"),S.fti,S.remake]},
+];
+const SRC={"Patagonia":[{"t":"Big Names in Fashion Rated for Their Impact on Animals — FOUR PAWS (2023)","u":"https://www.fourpawsusa.org/our-stories/blog-news/big-names-in-fashion-rated-for-their-impact-on-animals","c":"a","f":"Named among the top-rated brands in the 2023 Animal Welfare in Fashion report."},{"t":"2023 KnowTheChain Apparel & Footwear Benchmark — Business & Human Rights Resource Centre (2024)","u":"https://www.business-humanrights.org/en/from-us/briefings/2023-knowthechain-apparel-footwear-benchmark/","c":"l","f":"Industry benchmark found the average apparel company scored just 21/100 on forced-labour due diligence."},{"t":"Statement on Forced Labor, Modern Slavery, Child Labor — Patagonia (2025)","u":"https://scalca.blob.core.windows.net/2025/Patagonia%2C_Inc_and_Patagonia_Canada_ULC_2025_1nJhAT.pdf","c":"l","f":"Discloses 61 finished-goods factories across 13 countries."},{"t":"Corporate & Social Responsibility History — Patagonia","u":"https://www.patagonia.com/our-footprint/corporate-social-responsibility-history.html","c":"t","f":"Publicly documents its labour-practice history and supply-chain approach."},{"t":"Synthetics Anonymous — Changing Markets Foundation (2021)","u":"https://changingmarkets.org/press-releases/fashion-industry-addicted-to-greenwashing-and-fossil-fuel-based-synthetics-uk/","c":"e","f":"Named among the least transparent brands on synthetic-fibre use despite its reputation."}],
+"Eileen Fisher":[{"t":"Eileen Fisher — Certified B Corporation — B Lab","u":"https://www.bcorporation.net/en-us/find-a-b-corp/company/eileen-fisher-inc/","c":"t","f":"Certified B Corporation since December 2015."},{"t":"2024 Benefit Corporation Report — Eileen Fisher (2024)","u":"https://www.eileenfisher.com/ns/journal/benefit-corp-report-2024-web.pdf","c":"e","f":"Reports a B Impact Score of 109.4 and 85% of wool from regenerative farms."},{"t":"We're Still a B Corp — Eileen Fisher (2022, updated)","u":"https://www.eileenfisher.com/a-sustainable-life/journal/community/were-still-a-b-corp.html","c":"t","f":"Discloses its score history, including a dip to 89 in 2021."},{"t":"2023 Benefit Corporation Report — Eileen Fisher (2023)","u":"https://www.eileenfisher.com/ns/journal/benefit-corp-report-2023-FINAL-web-rc.pdf","c":"l","f":"20% of 2023 products made in Fair Trade USA Certified factories."}],
+"Reformation":[{"t":"Fashion Transparency Index 2023 — Fashion Revolution (2023)","u":"https://www.fashionrevolution.org/fashion-transparency-index-2023/","c":"t","f":"Benchmark scoring 250 major brands on supply-chain disclosure."},{"t":"Sustainability Report 2024 Year in Review — Reformation (2025)","u":"https://media.thereformation.com/image/upload/v1778612472/pdfs/SusReport25_FINAL.pdf","c":"e","f":"States it is on track to be Climate Positive by end of 2025, circular by 2030."},{"t":"Fashion Accountability Report 2022 — Remake (2023)","u":"https://remake.world/wp-content/uploads/2023/01/Remake_AccountabilityReport_2022.pdf","c":"l","f":"Assesses Reformation on traceability, wages and governance."}],
+"Everlane":[{"t":"Remake 2024 Fashion Accountability Report — Fashion Dive (2024)","u":"https://www.fashiondive.com/news/remake-2024-fashion-accountability-report/711682/","c":"t","f":"Top score among 52 brands (40/150) — still only 26% of the maximum."},{"t":"Ask Everlane to Stop Union Busting — Remake","u":"https://remake.world/stories/news/ask-everlane-to-stop-union-busting-and-improve-transparency-efforts/","c":"l","f":"Reports HR emails discouraging staff from unionizing."},{"t":"Fashion Accountability Report 2022 — Remake (2023)","u":"https://remake.world/wp-content/uploads/2023/01/Remake_AccountabilityReport_2022.pdf","c":"e","f":"Scored on raw materials and environmental-justice criteria."},{"t":"Highest Score in Remake's Report 2024 — Everlane blog","u":"https://blog.everlane.com/everworld/we-received-the-highest-score-in-remakes-fashion-accountability-report-2024","c":"t","f":"Brand confirms its 40/150 top ranking."}],
+"Levi's":[{"t":"A Renewed Climate Commitment — Levi Strauss & Co. (2024)","u":"https://www.levistrauss.com/2024/05/13/lsco-renewed-climate-commitment/","c":"e","f":"Net-zero 2050 goal validated by SBTi; 42% Scope 3 cut targeted by 2030."},{"t":"Climate Action — Levi Strauss & Co.","u":"https://www.levistrauss.com/sustainability-report/climate/climate-action/","c":"e","f":"85% renewable electricity at owned facilities (FY2021)."},{"t":"2025 Sustainability Goals and Metrics — Levi Strauss & Co.","u":"https://www.levistrauss.com/wp-content/uploads/2026/07/2025-Sustainability-Goals-and-Metrics.pdf","c":"t","f":"Discloses climate, consumption and community data against targets."},{"t":"Target Dashboard — Science Based Targets initiative","u":"https://sciencebasedtargets.org/target-dashboard","c":"e","f":"Lists Levi Strauss & Co. with validated targets."}],
+"Adidas":[{"t":"Adidas is stealing from its workers — Clean Clothes Campaign (2022)","u":"https://cleanclothes.org/news/2022/adidas-is-stealing-from-its-workers","c":"l","f":"Linked to $11.7M in pandemic-era wage theft across Cambodian factories."},{"t":"Pandemic-era wage theft in Cambodia — Clean Clothes Campaign (2021)","u":"https://cleanclothes.org/news/2021/fashion-brands-fail-to-address-pandemic-era-wage-theft-in-cambodia","c":"l","f":"Topped the list of implicated brands."},{"t":"Cambodian union leader addresses adidas shareholders — Clean Clothes Campaign (2024)","u":"https://cleanclothes.org/news/2024/cambodian-union-leader-travels-to-germany-to-address-adidas-shareholders-on-behalf-of-unpaid-workers","c":"l","f":"500 former supplier workers still owed ~$1M severance."},{"t":"Fashion Transparency Index Brazil 2021 — Fashion Revolution","u":"https://www.fashionrevolution.org/wp-content/uploads/2021/11/Press-release-FTI-Brazil-2021-2.pdf","c":"t","f":"Scored 53%, among the higher disclosers."}],
+"Nike":[{"t":"Nike — Good On You","u":"https://directory.goodonyou.eco/brand/nike","c":"l","f":"Rated 'It's a Start'; 2/5 on People."},{"t":"Canada probes Nike over alleged forced labor — Reuters (2023)","u":"https://www.reuters.com/world/canada-probes-nike-dynasty-gold-over-alleged-use-forced-labor-china-2023-07-11/","c":"l","f":"Formal investigation into alleged Uyghur forced-labour links."},{"t":"Nike Animal Skins Policy — Nike (2024)","u":"https://media.about.nike.com/files/372abf76-8135-4887-a2c8-8c9044c61030/Nike_Animal_Skins_Policy_2024_7_01.pdf","c":"a","f":"Requires RWS wool; bans exotic skins, fur and live-plucked down."},{"t":"Fashion Transparency Index Brazil 2021 — Fashion Revolution","u":"https://www.fashionrevolution.org/wp-content/uploads/2021/11/Press-release-FTI-Brazil-2021-2.pdf","c":"t","f":"Listed among brands disclosing no information."}],
+"H&M":[{"t":"H&M ranks 1st in What Fuels Fashion? — H&M Group (2025)","u":"https://hmgroup.com/news/hm-ranks-1st-in-fashion-revolutions-what-fuels-fashion-report/","c":"t","f":"Ranked 1st of 200 brands on decarbonisation transparency (71%)."},{"t":"Synthetics Anonymous — Changing Markets Foundation (2021)","u":"https://changingmarkets.org/press-releases/fashion-industry-addicted-to-greenwashing-and-fossil-fuel-based-synthetics-uk/","c":"e","f":"96% of analysed green claims found false or misleading — worst of 12 brands."},{"t":"Synthetics Anonymous 2.0 — Changing Markets Foundation (2022)","u":"https://changingmarkets.org/wp-content/uploads/2022/12/Synthetics-Anonymous-2-online-reports-layout.pdf","c":"e","f":"Continued reliance on fossil-fuel synthetic fibres."},{"t":"Most Transparent Fashion Companies (2023 Index) — RetailBoss (2024)","u":"https://retailboss.co/most-transparent-fashion-companies-worldwide-in-2023/","c":"t","f":"Ranked 6th globally at 71%."}],
+"Uniqlo":[{"t":"Uniqlo does not use Xinjiang cotton, boss says — BBC News (2024)","u":"https://www.bbc.com/news/articles/c79zqdl7j2go","c":"l","f":"CEO stated Uniqlo does not source Xinjiang cotton."},{"t":"Uniqlo faces China backlash — BBC News (2024)","u":"https://www.bbc.com/news/articles/ckgld4y4l12o","c":"l","f":"Faced a consumer boycott after the remarks."},{"t":"Uniqlo criticised in China — Reuters (2024)","u":"https://www.reuters.com/business/retail-consumer/uniqlo-risks-boycott-china-after-ceos-xinjiang-comment-2024-11-29/","c":"l","f":"About a fifth of revenue comes from Greater China."},{"t":"Uniqlo boss on Xinjiang cotton — Radio Free Asia (2024)","u":"https://www.rfa.org/english/uyghur/2024/11/29/uyghur-uniqlo-xinjiang-cutton/","c":"t","f":"Had stayed 'neutral' on sourcing disclosure for years."}],
+"Zara":[{"t":"Zara supplier accused of slave labor in Brazil — Reuters (2011)","u":"https://www.reuters.com/article/world/europe/zara-supplier-accused-of-slave-labor-in-brazil-idUSN1E77G18N/","c":"l","f":"Raids found conditions 'analogous to slavery' at a supplier workshop."},{"t":"From moral responsibility to legal liability? — BHRRC (2015)","u":"https://www.business-humanrights.org/en/latest-news/brazil-from-moral-responsibility-to-legal-liability/","c":"l","f":"Concludes Zara Brasil controlled its supply chain and bears responsibility."},{"t":"Índice de Transparência da Moda Brasil — Fashion Revolution Brasil","u":"https://fashionrevolutionbrasil.org/indice-transparencia-moda-brasil-2024/","c":"t","f":"Tracks Zara/Inditex disclosure; little specific risk data."},{"t":"Fashion Transparency Index — Fashion Revolution","u":"https://www.fashionrevolution.org/fashion-transparency-index/","c":"t","f":"Inditex ranked annually among the 250 largest brands."}],
+"Gap":[{"t":"Cambodia: Labor Laws Fail to Protect Garment Workers — Human Rights Watch (2015)","u":"https://www.hrw.org/news/2015/03/11/cambodia-labor-laws-fail-protect-garment-workers","c":"l","f":"Forced overtime, pregnancy discrimination and anti-union tactics in supplier factories."},{"t":"Precarious Work in the Gap Value Chain — Asia Floor Wage Alliance (2022)","u":"http://asia.floorwage.org/wp-content/uploads/2022/01/Precarious-Work-in-the-GAP-Global-Value-Chain.pdf","c":"l","f":"Documents precarious contracting and wage practices."},{"t":"Pandemic-era wage theft in Cambodia — Clean Clothes Campaign (2021)","u":"https://cleanclothes.org/news/2021/fashion-brands-fail-to-address-pandemic-era-wage-theft-in-cambodia","c":"l","f":"Linked to $6.7M in unpaid wages."},{"t":"Gap's response on Bangladesh minimum wage — BHRRC (2024)","u":"https://www.business-humanrights.org/en/latest-news/gaps-response-to-bangladesh-minimum-wage-outreach/","c":"t","f":"Publicly confirmed vendors pay the 2023 minimum wage."}],
+"Lululemon":[{"t":"Scorecard: lululemon — Stand.earth","u":"https://stand.earth/fashion/companies/lululemon/scorecard/","c":"e","f":"Graded 'C'; manufacturing emissions up 113%."},{"t":"lululemon's 2022 emissions increase — Stand.earth (2023)","u":"https://stand.earth/insights/lululemons-2022-emissions-increase/","c":"e","f":"Links coal-powered Vietnam factories to pollution."},{"t":"Synthetics Anonymous — Changing Markets Foundation (2021)","u":"https://changingmarkets.org/press-releases/fashion-industry-addicted-to-greenwashing-and-fossil-fuel-based-synthetics-uk/","c":"t","f":"Among the least transparent on synthetic fibre use."},{"t":"How Sportswear Brands are Stretching 'Sustainability' — Stand.earth (2023)","u":"https://stand.earth/resources/health-wellness-and-pollution-how-sportswear-brands-are-stretching-sustainability/","c":"l","f":"Flags wage-theft allegations and greenwashing."}],
+"Primark":[{"t":"Primark urged to sign safety agreement — The Guardian (2013)","u":"https://www.theguardian.com/world/2013/apr/25/bangladesh-factory-collapse-primark-inspections","c":"l","f":"Pressed to join a binding safety accord after Rana Plaza."},{"t":"Primark backs safety drive — The Guardian (2013)","u":"https://www.theguardian.com/business/2013/jun/22/primark-safety-drive-bangladesh-factory","c":"l","f":"Warned it could leave Bangladesh if safety didn't improve."},{"t":"Retailers compensate Dhaka victims — The Guardian (2013)","u":"https://www.theguardian.com/world/2013/apr/29/primark-compensation-bangladesh-factory-collapse","c":"l","f":"Among the first to announce compensation."},{"t":"Primark to pay £6m more to Rana Plaza victims — The Guardian (2014)","u":"http://www.theguardian.com/world/2014/mar/16/primark-payout-victims-rana-plaza-bangladesh","c":"l","f":"Paid an additional £6m to 581 workers and families."}],
+"Shein":[{"t":"Inside the Chinese factories fuelling Shein — BBC News (2025)","u":"https://www.bbc.com/news/articles/cdrylgvr77jo","c":"l","f":"Workers sewing ~75 hours a week, often one day off a month."},{"t":"Follow-up investigation refutes Shein's promise — Public Eye (2024)","u":"https://www.publiceye.ch/en/media-corner/press-releases/detail/follow-up-investigation-in-china-refutes-sheins-promise-of-improvement","c":"l","f":"75-hour weeks still typical at suppliers."},{"t":"75-hour weeks for Shein — Public Eye (2021)","u":"https://www.publiceye.ch/en/media-corner/press-releases/detail/75-hour-weeks-for-shein-public-eye-looks-behind-the-chinese-online-fashion-giants-glitzy-front","c":"l","f":"Excessive overtime and unsafe workshops found."},{"t":"Fashion Accountability Report 2022 — Remake (2023)","u":"https://remake.world/wp-content/uploads/2023/01/Remake_AccountabilityReport_2022.pdf","c":"t","f":"Case study on Shein's governance and sourcing opacity."}]};
+const W={e:.35,l:.3,t:.2,a:.15}, L={e:"Environment",l:"Labour",t:"Transparency",a:"Animal welfare"};
+B.forEach(b=>b.s=SRC[b.n]||[]);
+B.forEach(b=>b.score=Math.round(Object.keys(W).reduce((s,k)=>s+b[k][0]*W[k],0)));
+const col=v=>v>=70?"var(--moss)":v>=50?"var(--ochre)":v>=30?"var(--clay)":"var(--rust)";
+const lab=v=>v>=70?"Great":v>=50?"Good":v>=30?"Not good enough":"Avoid";
+const $=id=>document.getElementById(id);
+const ring=v=>`<div class="ring" style="--p:${v};--c:${col(v)}"><div><div><b>${v}</b><br><small>/ 100</small></div></div></div>`;
+const idx=(b,k)=>b.s.map((s,i)=>s.c===k?i:-1).filter(i=>i>=0);
+const finds=(b,k,pre)=>{const ix=idx(b,k);return ix.length?`<ul class="finds">${ix.map(i=>`<li>${b.s[i].f}<sup><a href="#${pre}src${i}">${i+1}</a></sup></li>`).join("")}</ul>`:`<p class="nos">No brand-specific public source found yet for this category.</p>`};
+const refs=(b,k,pre)=>"";const _r=(b,ix,pre)=>ix.map(i=>`<sup><a href="#${pre}src${i}">${i+1}</a></sup>`).join("");
+
+function render(b){
+  $("out").innerHTML=`<div class="card result">
+   <div class="top">${ring(b.score)}<div class="meta"><span class="tag" style="background:${col(b.score)}">${lab(b.score)}</span><h2>${b.n}</h2><p>${b.d}</p></div></div>
+   <div class="cats">${Object.keys(W).map(k=>`<div class="cat"><h3>${L[k]}<span>${b[k][0]}</span></h3><div class="bar"><i style="width:${b[k][0]}%;background:${col(b[k][0])}"></i></div><p>${b[k][1]}</p>${finds(b,k,"")}</div>`).join("")}</div>
+   <div class="sources"><h3>Sources</h3><ol>${b.s.map((s,i)=>`<li id="src${i}"><a href="${s.u}" target="_blank" rel="noopener">${s.t}</a> · ${L[s.c]}</li>`).join("")}</ol></div>
+  </div>`;
+}
+function find(v){v=v.trim().toLowerCase().replace(/[^a-z0-9&]/g,"");return B.find(b=>b.n.toLowerCase().replace(/[^a-z0-9&]/g,"")===v)}
+let hi=-1;
+$("q").addEventListener("input",e=>{
+  const v=e.target.value.toLowerCase().trim(); hi=-1;
+  const m=v?B.filter(b=>b.n.toLowerCase().includes(v)):[];
+  $("sugg").style.display=v?"block":"none";
+  $("sugg").innerHTML=m.length?m.map(b=>`<div data-n="${b.n}"><span>${b.n}</span><span style="color:${col(b.score)}">${b.score}</span></div>`).join(""):`<div style="cursor:default;color:var(--muted)">No data yet for “${e.target.value}”</div>`;
+});
+$("q").addEventListener("keydown",e=>{
+  const items=[...$("sugg").querySelectorAll("[data-n]")];
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();hi=(hi+(e.key==="ArrowDown"?1:-1)+items.length)%items.length;items.forEach((x,i)=>x.classList.toggle("on",i===hi));}
+  if(e.key==="Enter"){const b=items[hi]?find(items[hi].dataset.n):(find(e.target.value)||(items[0]&&find(items[0].dataset.n))); if(b)pick(b); else {$("sugg").style.display="none";$("out").innerHTML=`<p class="empty">We don't have public data compiled for that brand yet.</p>`}}
+});
+$("sugg").addEventListener("click",e=>{const d=e.target.closest("[data-n]");if(d)pick(find(d.dataset.n))});
+document.addEventListener("click",e=>{if(!e.target.closest(".search"))$("sugg").style.display="none"});
+function pick(b){$("q").value=b.n;$("sugg").style.display="none";render(b)}
+$("chips").innerHTML=["Patagonia","H&M","Nike","Shein","Reformation"].map(n=>`<button class="chip">${n}</button>`).join("");
+$("chips").onclick=e=>{if(e.target.matches(".chip"))pick(find(e.target.textContent))};
+
+// compare
+const opts=B.map((b,i)=>`<option value="${i}">${b.n}</option>`).join("");
+$("a").innerHTML=opts;$("b").innerHTML=opts;$("a").value=0;$("b").value=7;
+function cmp(){
+  const x=B[$("a").value],y=B[$("b").value];
+  $("cmp").innerHTML=[[x,y,"a"],[y,x,"b"]].map(([b,o,p])=>`<div class="card">
+   <div class="top">${ring(b.score)}<div class="meta"><span class="tag" style="background:${col(b.score)}">${lab(b.score)}</span><h2>${b.n}</h2></div></div>
+   ${Object.keys(W).map(k=>`<div class="row"><span>${L[k]}</span><span class="${b[k][0]>o[k][0]?"win":""}">${b[k][0]}</span></div><div class="bar"><i style="width:${b[k][0]}%;background:${col(b[k][0])}"></i></div><p style="font-size:.85rem;color:var(--muted)">${b[k][1]}</p>${finds(b,k,p)}`).join("")}
+   <div class="sources"><h3>Sources</h3><ol>${b.s.map((s,i)=>`<li id="${p}src${i}"><a href="${s.u}" target="_blank" rel="noopener">${s.t}</a> · ${L[s.c]}</li>`).join("")}</ol></div>
+  </div>`).join("");
+}
+$("a").onchange=$("b").onchange=cmp;cmp();
+
+// tabs
+const tabs={S:"viewS",C:"viewC",M:"viewM"};
+Object.keys(tabs).forEach(k=>$("tab"+k).onclick=()=>{Object.keys(tabs).forEach(j=>{$(tabs[j]).classList.toggle("hidden",j!==k);$("tab"+j).classList.toggle("active",j===k)})});
+</script>
+</body>
+</html>
